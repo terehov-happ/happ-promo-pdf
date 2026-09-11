@@ -1,0 +1,2427 @@
+/* ───────────────────────────────────────────────────────────────────────────
+ * HAPP · Отчёт по анализу коммуникаций — веб-версия + печать в PDF.
+ *
+ * Токены портированы 1:1 из двух источников, которые их и так делят:
+ *   happ-landing-next/src/app/globals.css   (@theme: brand/text/border, easings)
+ *   platform-ui/src/styles.css              (@theme: Untitled UI gray/brand/status)
+ * Оба построены на Untitled UI с brand-600 = #0077f0, поэтому конфликта нет:
+ * лендинговые --color-text-* — это именованные точки той же серой рампы.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+	/* Families. Лендинг отдаёт их через next/font; здесь — Google Fonts плюс
+	   системный фолбэк, чтобы печать не поехала, если шрифт не пришёл. */
+	--font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--font-hero: 'Host Grotesk', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+	/* Brand — Happ blue, brand-600 = primary. */
+	--brand-25: #e6f1fe;
+	--brand-50: #cce4fc;
+	--brand-100: #b3d6fb;
+	--brand-200: #99c9f9;
+	--brand-300: #66adf6;
+	--brand-400: #3392f3;
+	--brand-500: #1a85f2;
+	--brand-600: #0077f0;
+	--brand-700: #006bd8;
+	--brand-800: #005fc0;
+	--brand-900: #0053a8;
+	--brand-950: #003d7c;
+
+	/* Gray (neutral). */
+	--gray-25: #fdfdfd;
+	--gray-50: #fafafa;
+	--gray-100: #f5f5f5;
+	--gray-200: #e9eaeb;
+	--gray-300: #d5d7da;
+	--gray-400: #a4a7ae;
+	--gray-500: #717680;
+	--gray-600: #535862;
+	--gray-700: #414651;
+	--gray-800: #252b37;
+	--gray-900: #181d27;
+	--gray-950: #0a0d12;
+
+	/* Status. */
+	--success-50: #ecfdf3;
+	--success-200: #a6f4c5;
+	--success-500: #12b76a;
+	--success-600: #039855;
+	--success-700: #027948;
+	--warning-50: #fffaeb;
+	--warning-200: #fedf89;
+	--warning-500: #f79009;
+	--warning-600: #dc6803;
+	--warning-700: #b54708;
+	--error-50: #fef3f2;
+	--error-200: #fecdca;
+	--error-300: #fda29b;
+	--error-500: #f04438;
+	--error-600: #d92d20;
+	--error-700: #b42318;
+	--blue-light-50: #f0f9ff;
+	--blue-light-200: #b9e6fe;
+	--blue-light-700: #026aa2;
+	--purple-50: #f4f3ff;
+	--purple-200: #d9d6fe;
+	--purple-600: #7f56d9;
+	--purple-700: #6941c6;
+
+	/* Семантика текста и границ — имена лендинга. */
+	--text-primary: #181d27;
+	--text-secondary: #414651;
+	--text-quaternary: #667085;
+	--border-primary: #d5d7da;
+	--border-secondary: #e9eaeb;
+
+	/* Радиусы — шкала лендинга (md 8 / lg 10 / xl 12), плюс 16/20/32 для полотен.
+	   --radius-card = 20px: это «главный радиус карточек» из DESIGN.md лендинга
+	   (бенто-карточка `rounded-[20px]`), а не 12px, на которых отчёт стоял. */
+	--radius-md: 8px;
+	--radius-xl: 12px;
+	--radius-2xl: 16px;
+	--radius-card: 20px;
+	--radius-banner: 32px;
+
+	/* Поверхности лендинга: белая страница, карточки заливкой #fafafa и одной
+	   хайрлайн-рамкой. Тени у карточек нет — DESIGN.md: «никаких тяжёлых теней».
+	   Тень осталась только там, где она есть и на лендинге: у белых панелей,
+	   лежащих поверх серой карточки. */
+	--surface-card: #fafafa;
+	--surface-raised: #ffffff;
+	--border-card: #e5e7eb;
+
+	/* Теней у карточек нет — DESIGN.md лендинга: «никаких тяжёлых теней». Две
+	   оставшиеся (панель фактов на обложке и пилюля шапки) заданы сырыми
+	   значениями из той же таблицы лендинга, рампы под них не нужно. */
+
+	/* Кривая из platform-ui. */
+	--ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+
+	--shell: 1180px;
+	--topbar-h: 64px;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	scroll-behavior: smooth;
+	/* Прокрутка по анкеру не должна заезжать под липкий топбар. */
+	scroll-padding-top: calc(var(--topbar-h) + 16px);
+	-webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+}
+
+body {
+	margin: 0;
+	font-family: var(--font-sans);
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-primary);
+	background: #ffffff;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	font-variant-numeric: tabular-nums;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	margin: 0;
+	font-weight: 500;
+}
+
+p {
+	margin: 0;
+}
+
+ul,
+ol {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+a {
+	color: var(--brand-700);
+	text-decoration: none;
+}
+
+table {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+/* ── Топбар ───────────────────────────────────────────────────────────────── */
+
+/* Шапка лендинга — не полоса во всю ширину, а плавающая пилюля над небом:
+   внешний слой держит отступ и липкость, внутренний рисует саму пилюлю. Радиус
+   26px (ровно половина высоты) — не `999px`: при переносе на узких экранах
+   капсула превращается в кривой овал, см. DESIGN.md. */
+.topbar {
+	/* fixed, а не sticky: sticky участвует в потоке и отодвигает герой вниз —
+	   пилюля оказывалась на белом над градиентом, а не на нём. Вне потока она
+	   ложится поверх неба, как на лендинге, где плита неба спозиционирована
+	   абсолютно и хедер естественно оказывается над ней. */
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 50;
+	display: flex;
+	justify-content: center;
+	padding: 8px 16px 0;
+	pointer-events: none;
+}
+
+/* Пилюля обжимает содержимое, а не тянется на всю колонку. Пока справа стояла
+   кнопка, ширина 1180px держала три группы по краям; после переезда кнопки в
+   лаунчер осталось две, и между подписью и навигацией зияла пустая треть. */
+.topbar__pill {
+	pointer-events: auto;
+	max-width: 100%;
+	min-height: 52px;
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	/* Правый отступ был рассчитан под кнопку, которая переехала в лаунчер:
+	   с 8px последний пункт нава прилипал к кромке пилюли. */
+	padding: 8px 16px;
+	border-radius: 26px;
+	background: rgba(255, 255, 255, 0.9);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	box-shadow: inset 0 0 0 1px #eaecf0, 0 1px 2px rgba(10, 13, 18, 0.04),
+		0 12px 32px -8px rgba(10, 13, 18, 0.12);
+}
+
+.topbar__brand {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+
+.topbar__brand img {
+	display: block;
+	height: 26px;
+	width: auto;
+}
+
+.topbar__divider {
+	width: 1px;
+	height: 20px;
+	background: var(--border-secondary);
+	flex-shrink: 0;
+}
+
+.topbar__label {
+	font-size: 13px;
+	color: var(--text-quaternary);
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+/* Навигация по разделам. Прокручивается по горизонтали, а не переносится: на
+   1180px девять ссылок в строку не влезают, а перенос ломает высоту бара. */
+.topbar__nav {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	min-width: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+	mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+}
+
+.topbar__nav::-webkit-scrollbar {
+	display: none;
+}
+
+.topbar__nav a {
+	padding: 6px 12px;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--gray-500);
+	white-space: nowrap;
+	transition: color 150ms var(--ease-out-strong), background-color 150ms var(--ease-out-strong);
+}
+
+.topbar__nav a:hover {
+	color: var(--gray-900);
+	background: var(--gray-100);
+}
+
+.topbar__nav a[aria-current='true'] {
+	color: var(--brand-700);
+	background: var(--brand-25);
+}
+
+.topbar__cta {
+	flex-shrink: 0;
+	border-radius: 999px;
+}
+
+/* На узком экране от бара остаётся логотип и кнопка. Навигация по десяти
+   разделам на 400px превращается в полоску из двух видимых ссылок, которая
+   съедает место у единственного действия, ради которого бар и нужен. */
+@media (max-width: 720px) {
+	.topbar__pill {
+		gap: 12px;
+	}
+
+	.topbar__label,
+	.topbar__divider,
+	.topbar__nav {
+		display: none;
+	}
+
+	.topbar__cta {
+		margin-left: auto;
+	}
+}
+
+/* ── Кнопки (портированы с .happ-button: границы — inset-тени, не border) ── */
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	flex-shrink: 0;
+	border: 0;
+	border-radius: var(--radius-xl);
+	padding: 10px 18px;
+	font-family: inherit;
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+	cursor: pointer;
+	overflow: clip;
+	-webkit-tap-highlight-color: transparent;
+	transition: background-color 150ms ease-out, color 150ms ease-out, box-shadow 150ms ease-out,
+		scale 150ms var(--ease-out-strong);
+}
+
+.btn:active {
+	scale: 0.96;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.btn:active {
+		scale: 1;
+	}
+}
+
+.btn svg {
+	display: block;
+	flex-shrink: 0;
+}
+
+.btn--brand {
+	color: #ffffff;
+	background: var(--brand-600);
+	box-shadow: inset 0 0 0 1px rgba(10, 13, 18, 0.18), inset 0 4px 4px rgba(255, 255, 255, 0.25);
+}
+
+.btn--brand:hover:not(:focus-visible) {
+	background: var(--brand-700);
+}
+
+/* Основной CTA внутри белой или серой карточки. На небе и в шапке — синяя;
+   не смешивать в одном блоке (правило выбора из DESIGN.md лендинга). */
+.btn--dark {
+	color: #ffffff;
+	background: #0a0d12;
+	box-shadow: inset 0 0 0 1px rgba(10, 13, 18, 0.18), inset 0 4px 4px rgba(255, 255, 255, 0.25);
+}
+
+.btn--dark:hover:not(:focus-visible) {
+	background: #181d27;
+}
+
+.btn--outline {
+	color: var(--text-secondary);
+	background: #ffffff;
+	box-shadow: inset 0 0 0 1px var(--border-primary);
+}
+
+.btn--outline:hover:not(:focus-visible) {
+	color: var(--gray-800);
+	background: var(--gray-50);
+}
+
+.btn--glass {
+	color: #ffffff;
+	background: rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.btn--glass:hover:not(:focus-visible) {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+/* Белая кнопка на небе. Правило лендинга просит здесь синюю, но его небо у
+   кнопки уже почти белое, а это должно работать и обложкой PDF, поэтому плита
+   тут глубже — синяя кнопка на ней превращается в пятно чуть темнее фона. */
+.btn--white {
+	color: var(--brand-700);
+	background: #ffffff;
+	box-shadow: inset 0 0 0 1px rgba(10, 13, 18, 0.08), inset 0 4px 4px rgba(255, 255, 255, 0.25);
+}
+
+.btn--white:hover:not(:focus-visible) {
+	background: var(--gray-50);
+}
+
+.btn--sm {
+	padding: 7px 12px;
+	font-size: 13px;
+}
+
+:where(.btn, .topbar__nav a, a, summary):focus-visible {
+	outline: 2px solid var(--brand-600);
+	outline-offset: 2px;
+}
+
+/* ── Раскладка секций (px-6 py-16 / md:px-[130px] md:py-24 с лендинга) ───── */
+
+/* Ритм секции лендинга: px-6 на мобиле → md:px-[130px], py-24 (96px). */
+.section {
+	display: flex;
+	justify-content: center;
+	padding: 64px 24px;
+}
+
+@media (min-width: 900px) {
+	.section {
+		padding: 96px 130px;
+	}
+}
+
+/* Чередование фона убрано. На лендинге страница белая насквозь, а серым (#fafafa)
+   залиты карточки — здесь было наоборот: белые карточки на сером фоне через
+   раздел. С новой заливкой карточек серая секция сделала бы их невидимыми. */
+
+.shell {
+	width: 100%;
+	max-width: var(--shell);
+	display: flex;
+	flex-direction: column;
+	gap: 48px;
+}
+
+/* Eyebrow + заголовок Host Grotesk + приглушённый подзаголовок — SectionHeading. */
+/* SectionHeading лендинга: центрированная колонка eyebrow → h2 → подзаголовок.
+   Отчёт ставил шапку по левому краю; центр — самый узнаваемый паттерн главной. */
+.heading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	max-width: 760px;
+	margin: 0 auto;
+	text-align: center;
+}
+
+.heading__eyebrow {
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 500;
+	letter-spacing: -0.42px;
+	color: var(--brand-900);
+}
+
+.heading h2 {
+	font-family: var(--font-hero);
+	font-size: 30px;
+	line-height: 38px;
+	letter-spacing: -0.6px;
+	text-wrap: balance;
+	color: var(--text-primary);
+}
+
+@media (min-width: 900px) {
+	.heading h2 {
+		font-size: 36px;
+		line-height: 44px;
+		letter-spacing: -0.72px;
+	}
+}
+
+.heading__lede {
+	font-size: 14px;
+	line-height: 20px;
+	max-width: 640px;
+	text-wrap: pretty;
+	color: var(--text-quaternary);
+}
+
+/* ── Карточки ─────────────────────────────────────────────────────────────── */
+
+.card {
+	background: var(--surface-card);
+	border: 1px solid var(--border-card);
+	border-radius: var(--radius-card);
+}
+
+.card--pad {
+	padding: 24px;
+}
+
+.card__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 20px 24px;
+	border-bottom: 1px solid var(--border-card);
+}
+
+/* Пилюли в шапке карточки не переносятся внутри себя (`white-space: nowrap`),
+   поэтому на узком экране рядом с заголовком они не помещаются и выезжают за
+   карточку. Здесь шапка складывается в две строки. */
+@media (max-width: 720px) {
+	.card__head {
+		flex-wrap: wrap;
+	}
+}
+
+.card__title {
+	font-family: var(--font-hero);
+	font-size: 20px;
+	line-height: 30px;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.card__caption {
+	margin-top: 2px;
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-quaternary);
+}
+
+.card__body {
+	padding: 20px 24px;
+}
+
+/* Иллюстрация внутри карточки — на белой плите: на лендинге графики и имитации
+   UI лежат именно так, а не прямо на #fafafa. На сером фоне серый трек шкалы и
+   хайрлайны строк почти пропадают.
+   Отступ стоит на самой плите, а не на её детях: заливка всё равно занимает и
+   его, зато правило не спорит с классами содержимого. Через `> *` отступ уже
+   терялся у списка потерь — у `.loss` свой `padding: 16px 0` той же
+   специфичности, и он объявлен ниже, так что выигрывал источником. */
+.card__body--panel {
+	padding: 20px 24px;
+	background: var(--surface-raised);
+	border-radius: 0 0 calc(var(--radius-card) - 1px) calc(var(--radius-card) - 1px);
+}
+
+/* У .card--pad нет .card__head с разделителем, поэтому отступ между шапкой и
+   содержимым держит соседний селектор. Он берёт любого предшественника, а не
+   только .card__title: в узком рельсе заголовок стоит в .row рядом с пилюлей,
+   и правило на сам заголовок туда не доставало. */
+.card--pad > * + .stack {
+	margin-top: 16px;
+}
+
+/* Пара «название — значение» в правом рельсе. */
+.rail-label {
+	font-size: 13px;
+	color: var(--gray-500);
+}
+
+/* Таблица внутри карточки не рисует вторую рамку поверх карточной: границы и
+   тень остаются на .card, а .table-wrap отвечает только за прокрутку и за то,
+   чтобы нижние углы таблицы не вылезали из скруглений карточки. */
+.card > .table-wrap {
+	border: 0;
+	border-radius: 0 0 calc(var(--radius-card) - 1px) calc(var(--radius-card) - 1px);
+	background: var(--surface-raised);
+}
+
+.card > .table-wrap .table tr > :first-child {
+	padding-left: 20px;
+}
+
+.card > .table-wrap .table tr > :last-child {
+	padding-right: 20px;
+}
+
+.grid {
+	display: grid;
+	gap: 12px;
+}
+
+.grid--2 {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	align-items: start;
+}
+
+.grid--3 {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid--4 {
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid--wide-left {
+	grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+}
+
+@media (max-width: 1000px) {
+	.grid--4 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.grid--3,
+	.grid--wide-left {
+		grid-template-columns: repeat(1, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 640px) {
+	.grid--2,
+	.grid--3,
+	.grid--4 {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* ── Пилюли и бейджи (StatPill / Badge из redesign) ──────────────────────── */
+
+/* Бейдж Untitled UI, вариант с рамкой: заливка -50, рамка -200, текст -700.
+ * Отчёт стоял на плоских заливках без рамки, и при здешней плотности (девятнадцать
+ * бейджей на девять разворотов) они читались как размытые пятна, а не как метки.
+ * Рамка того же тона даёт кромку — чип становится предметом, а цвет — заметнее,
+ * при этом текст остаётся на -700 и держит контраст 5–6,5:1. Осветлить сам текст
+ * до -600 нельзя: красный на error-50 падает до 4,44:1, ниже порога AA.
+ *
+ * Оранжевого бейджа здесь нет. Он был третьим акцентом в документе, где по
+ * DESIGN.md лендинга акцент один — синий; вдобавок warning-700 — это коричневый,
+ * и рядом с красным он читался как выцветший красный, а не как отдельный статус.
+ * Те же факты («720 діалогів», «14 хв на відповідь») в разных разделах стояли то
+ * оранжевыми, то красными — то есть тон ничего и не значил. Оранжевый остался
+ * там, где он данные: столбцы часов без дежурного и ключ их легенды. */
+.pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	border-radius: 999px;
+	padding: 2px 10px;
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: 500;
+	white-space: nowrap;
+	box-shadow: inset 0 0 0 1px var(--pill-ring, transparent);
+}
+
+.pill--up {
+	background: var(--success-50);
+	color: var(--success-700);
+	--pill-ring: var(--success-200);
+}
+
+.pill--down {
+	background: var(--error-50);
+	color: var(--error-700);
+	--pill-ring: var(--error-200);
+}
+
+.pill--info {
+	background: var(--blue-light-50);
+	color: var(--brand-700);
+	--pill-ring: var(--blue-light-200);
+}
+
+.pill--neutral {
+	background: var(--surface-raised);
+	color: var(--text-secondary);
+	--pill-ring: var(--border-card);
+}
+
+.pill--purple {
+	background: var(--purple-50);
+	color: var(--purple-700);
+	--pill-ring: var(--purple-200);
+}
+
+.pill--outline {
+	background: var(--surface-raised);
+	color: var(--text-secondary);
+	--pill-ring: var(--border-primary);
+}
+
+/* Ключ легенды графика: нейтральный чип с точкой цвета ряда. Раньше это были
+ * два залитых бейджа — синий и оранжевый, — которые спорили с самими столбцами
+ * и вносили в шапку карточки второй акцентный цвет. Точка привязывает чип к
+ * ряду и оставляет цвет там, где он несёт данные. */
+.pill--key {
+	background: var(--surface-raised);
+	color: var(--text-secondary);
+	--pill-ring: var(--border-card);
+}
+
+.pill--key::before {
+	content: '';
+	width: 8px;
+	height: 8px;
+	flex-shrink: 0;
+	border-radius: 999px;
+	background: var(--dot, var(--brand-600));
+}
+
+.pill--glass {
+	background: rgba(255, 255, 255, 0.14);
+	color: #ffffff;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+	padding: 4px 12px;
+	font-size: 13px;
+}
+
+/* ── KPI-плитка (KpiStat из redesign/pages/home) ─────────────────────────── */
+
+.kpi {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	min-width: 0;
+	padding: 20px;
+	background: var(--surface-card);
+	border: 1px solid var(--border-card);
+	border-radius: var(--radius-card);
+}
+
+.kpi__top {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.kpi__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border: 1px solid #eaecf0;
+	border-radius: var(--radius-md);
+	background: var(--surface-raised);
+	color: var(--gray-600);
+}
+
+.kpi__value {
+	font-family: var(--font-hero);
+	font-size: 36px;
+	line-height: 44px;
+	letter-spacing: -0.72px;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.kpi__label {
+	margin-top: 4px;
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-quaternary);
+}
+
+.kpi--brand {
+	background: var(--brand-25);
+	border-color: var(--brand-200);
+}
+
+.kpi--brand .kpi__icon {
+	background: var(--brand-600);
+	border-color: transparent;
+	color: #ffffff;
+}
+
+.kpi--brand .kpi__value {
+	color: var(--brand-950);
+}
+
+.kpi--brand .kpi__label {
+	color: var(--brand-900);
+}
+
+/* ── Обложка / герой ─────────────────────────────────────────────────────── */
+
+/* Небесная плита лендинга. Раньше здесь был насыщенный сине-тёмный градиент с
+   двумя радиальными пятнами и затемнением к низу — на happ.tools такого нет:
+   плита светлая, одного цвета (HERO_PLATE_COLOR #1a62f5) и уходит в белый через
+   радиальный фейд, на границе которого лежит белая панель со скриншотом. Здесь
+   роль этой панели играет полоса фактов выборки. */
+.hero {
+	position: relative;
+	overflow: hidden;
+	/* На лендинге плиту красит анимированное полосовое поле: поверх #1a62f5 идут
+	   светлые ленты, и вблизи копии небо читается мягким, почти сиреневым. Плоская
+	   заливка тем же хексом выходит вдвое насыщеннее оригинала, поэтому сверху
+	   лежит широкий белёсый размыв — он заменяет ленты. */
+	background:
+		radial-gradient(120% 78% at 50% -18%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 62%),
+		#1a62f5;
+	color: #ffffff;
+}
+
+/* Полосы «неба» с лендинга (HeroStripes) — очень слабый диагональный муар: он
+   даёт плите фактуру и не спорит с текстом. На лендинге это анимированное
+   канвас-поле; здесь CSS, чтобы страница печаталась и работала без JS. */
+.hero::before {
+	content: '';
+	position: absolute;
+	inset: -40%;
+	background: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 92px);
+	pointer-events: none;
+}
+
+/* HERO_PLATE_FADE — значения из DESIGN.md лендинга, стоп-проценты сдвинуты под
+   более низкую плиту отчёта (у лендинга она 1024px и белым занята нижняя треть). */
+.hero::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(
+		82.5% 100% at 52.2% 0%,
+		rgba(0, 119, 240, 0) 46%,
+		rgba(64, 153, 244, 0.25) 56%,
+		rgba(128, 187, 247, 0.5) 66%,
+		rgba(191, 221, 251, 0.75) 76%,
+		#ffffff 88%
+	);
+	pointer-events: none;
+}
+
+/* Отступы входят в max-width, поэтому она шире --shell ровно на них: иначе
+   текст обложки встаёт на 48px правее заголовков всех секций ниже, где паддинг
+   лежит на внешнем .section, а не на полосе контента. */
+/* Отступы входят в max-width, поэтому она шире --shell ровно на них — и ровно
+   на те же, что у .section. Гаттер героя был 48px против 130px у секций: до
+   1440px полоса контента расходилась, и панель фактов выезжала за колонку
+   остального документа на 160px. */
+.hero__inner {
+	position: relative;
+	z-index: 1;
+	max-width: calc(var(--shell) + 48px);
+	margin: 0 auto;
+	padding: 96px 24px 72px;
+	text-align: center;
+}
+
+@media (min-width: 900px) {
+	.hero__inner {
+		max-width: calc(var(--shell) + 260px);
+		padding: 136px 130px 88px;
+	}
+}
+
+.hero__meta {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-bottom: 28px;
+}
+
+.hero__logo {
+	display: block;
+	height: 30px;
+	width: auto;
+}
+
+/* H1 героя лендинга: 40/1.13 → md 60/68, tracking −1.2 → −1.8, вес 500. */
+.hero h1 {
+	font-family: var(--font-hero);
+	font-size: 40px;
+	line-height: 1.13;
+	letter-spacing: -1.2px;
+	font-weight: 500;
+	text-wrap: balance;
+	max-width: 900px;
+	margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+	.hero h1 {
+		font-size: 60px;
+		line-height: 68px;
+		letter-spacing: -1.8px;
+	}
+}
+
+/* Подзаголовок героя течёт сам и не разбит на строки — см. «Исключение — герой»
+   в DESIGN.md: зашитые переносы роняли последнее слово на отдельную строку. */
+.hero__lede {
+	margin: 20px auto 0;
+	max-width: 640px;
+	font-size: 14px;
+	line-height: 20px;
+	text-wrap: pretty;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.hero__actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 12px;
+	margin-top: 32px;
+}
+
+/* Полоса «что внутри выборки» — белая панель на границе фейда. На лендинге в
+   этом месте лежит скриншот приложения в стеклянной рамке; роль та же: плита,
+   которая перекрывает стык неба и белого и держит низ первого экрана. Раньше
+   это было тёмное стекло поверх синего — такого стекла на happ.tools нет, оно
+   там только у вторичной кнопки на небе. */
+.hero__facts {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 1px;
+	margin-top: 56px;
+	background: var(--border-card);
+	border: 1px solid var(--border-card);
+	border-radius: var(--radius-card);
+	overflow: hidden;
+	box-shadow: 0 2px 4px rgba(10, 13, 18, 0.04), 0 20px 44px -12px rgba(10, 13, 18, 0.14);
+}
+
+@media (max-width: 860px) {
+	.hero__facts {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.hero__fact {
+	padding: 20px;
+	background: var(--surface-raised);
+	text-align: left;
+}
+
+.hero__fact dt {
+	font-size: 12px;
+	line-height: 18px;
+	color: var(--text-quaternary);
+}
+
+/* Панель делит колонку 1180px на четыре, то есть на полосу ~250px, из которых
+   под текст остаётся ~210px. «1–31 серпня 2026» при 24px в них не влезает и
+   роняет год на вторую строку, вытягивая всю панель. 20px держат все четыре
+   значения в одну строку. */
+.hero__fact dd {
+	margin: 6px 0 0;
+	font-family: var(--font-hero);
+	font-size: 20px;
+	line-height: 28px;
+	letter-spacing: -0.4px;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.hero__fact dd small {
+	font-size: 13px;
+	font-weight: 400;
+	letter-spacing: 0;
+	color: var(--text-quaternary);
+}
+
+/* Выходные данные обложки — только на бумаге: на экране их роль играет подвал.
+   Лежат уже на белой части фейда, поэтому набраны тем же серым, что и body. */
+.hero__credit {
+	margin-top: 28px;
+	font-size: 12px;
+	line-height: 18px;
+	color: var(--text-quaternary);
+}
+
+/* ── Выводы ──────────────────────────────────────────────────────────────── */
+
+.finding {
+	display: flex;
+	gap: 16px;
+	padding: 20px;
+	background: var(--surface-card);
+	border: 1px solid var(--border-card);
+	border-radius: var(--radius-card);
+}
+
+.finding__num {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-md);
+	background: var(--brand-600);
+	box-shadow: inset 0 0 0 1px rgba(10, 13, 18, 0.18), inset 0 4px 4px rgba(255, 255, 255, 0.25);
+	color: #ffffff;
+	font-size: 14px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.finding__body {
+	min-width: 0;
+}
+
+.finding__title {
+	font-family: var(--font-hero);
+	font-size: 20px;
+	line-height: 30px;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.finding__text {
+	margin-top: 6px;
+	font-size: 14px;
+	line-height: 20px;
+	text-wrap: pretty;
+	color: var(--text-quaternary);
+}
+
+.finding__tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 12px;
+}
+
+/* ── Критерии и прогресс (ISalesCriterion / progress-fill) ──────────────── */
+
+.criteria {
+	display: flex;
+	flex-direction: column;
+}
+
+.criterion {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 168px 56px;
+	align-items: center;
+	gap: 16px;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--border-card);
+}
+
+.criterion:last-child {
+	border-bottom: 0;
+}
+
+@media (max-width: 700px) {
+	.criterion {
+		grid-template-columns: minmax(0, 1fr) 56px;
+	}
+
+	.criterion__track {
+		display: none;
+	}
+}
+
+.criterion__label {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--gray-800);
+}
+
+.criterion__note {
+	margin-top: 3px;
+	font-size: 12.5px;
+	line-height: 18px;
+	color: var(--gray-500);
+}
+
+.criterion__track {
+	height: 8px;
+	border-radius: 999px;
+	background: var(--gray-100);
+	overflow: hidden;
+}
+
+/* Ширина задаётся инлайном (--v), а анимация идёт по transform: масштаб по X не
+   перекладывает строку на каждом кадре — тот же приём, что в
+   AnalysisChartPlaceholder, где height заменили на scaleY. */
+.criterion__fill {
+	display: block;
+	height: 100%;
+	width: var(--v);
+	border-radius: 999px;
+	transform-origin: left center;
+	transition: transform 700ms var(--ease-out-strong);
+}
+
+/* Свёрнутое состояние живёт под `.js`, который ставит инлайновый скрипт в
+   <head>. Без него нечему добавить `.is-revealed`, и шкалы остались бы пустыми
+   — то есть отчёт врал бы о нулевых оценках. */
+.js .criteria:not(.is-revealed) .criterion__fill {
+	transform: scaleX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.criterion__fill {
+		transition: none;
+	}
+
+	.js .criteria:not(.is-revealed) .criterion__fill {
+		transform: scaleX(1);
+	}
+}
+
+.criterion__fill--high {
+	background: var(--success-500);
+}
+
+.criterion__fill--good {
+	background: var(--brand-500);
+}
+
+.criterion__fill--medium {
+	background: var(--warning-500);
+}
+
+.criterion__fill--low {
+	background: var(--error-500);
+}
+
+/* Шкала без оценочного тона. Разделы «темы», «сегменты» и «потенциал» показывают
+   доли, а не качество: там верхние строки выделены брендом как главные, а
+   остальные должны читаться как фон, а не как «плохо». */
+.criterion__fill--muted {
+	background: var(--gray-300);
+}
+
+.criterion__score {
+	text-align: right;
+	font-size: 14px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: var(--gray-900);
+}
+
+/* ScoreBadge — тон по той же шкале, что scoreToTone() в redesign. */
+.score {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 52px;
+	border-radius: 8px;
+	padding: 3px 8px;
+	font-size: 13px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.score--high {
+	background: var(--success-50);
+	color: var(--success-700);
+	box-shadow: inset 0 0 0 1px var(--success-200);
+}
+
+.score--good {
+	background: var(--blue-light-50);
+	color: var(--brand-700);
+	box-shadow: inset 0 0 0 1px var(--blue-light-200);
+}
+
+.score--medium {
+	background: var(--warning-50);
+	color: var(--warning-700);
+	box-shadow: inset 0 0 0 1px var(--warning-200);
+}
+
+.score--low {
+	background: var(--error-50);
+	color: var(--error-700);
+	box-shadow: inset 0 0 0 1px var(--error-200);
+}
+
+/* ── Кольцо общей оценки ─────────────────────────────────────────────────── */
+
+.ring {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+}
+
+.ring__svg {
+	flex-shrink: 0;
+}
+
+.ring__track {
+	stroke: var(--border-card);
+}
+
+.ring__value {
+	stroke: var(--brand-600);
+	stroke-linecap: round;
+	transform: rotate(-90deg);
+	transform-origin: center;
+	transition: stroke-dashoffset 900ms var(--ease-out-strong);
+}
+
+.ring__num {
+	font-family: var(--font-hero);
+	font-size: 30px;
+	font-weight: 600;
+	fill: var(--gray-900);
+	letter-spacing: -0.6px;
+}
+
+.ring__den {
+	font-size: 12px;
+	fill: var(--gray-500);
+}
+
+/* ── Столбцы (CSS-бары, как AnalysisChartPlaceholder) ───────────────────── */
+
+.bars {
+	display: flex;
+	align-items: flex-end;
+	gap: 12px;
+	height: 236px;
+}
+
+.bars__col {
+	display: flex;
+	flex: 1 1 0;
+	min-width: 0;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	height: 100%;
+}
+
+.bars__slot {
+	display: flex;
+	align-items: flex-end;
+	width: 100%;
+	flex: 1;
+	border-bottom: 1px solid var(--border-card);
+}
+
+.bars__bar {
+	width: 100%;
+	height: 100%;
+	border-radius: 6px 6px 0 0;
+	background: color-mix(in srgb, var(--brand-600) 90%, transparent);
+	transform-origin: bottom center;
+	transform: scaleY(var(--v));
+	transition: transform 700ms var(--ease-out-strong);
+}
+
+.bars__col--peak .bars__bar {
+	background: var(--brand-700);
+}
+
+/* До вскрытия столбцы лежат; .is-revealed поднимает их разом. Как и у шкал
+   критериев, свёрнутое состояние обусловлено `.js`. */
+.js .bars:not(.is-revealed) .bars__bar {
+	transform: scaleY(0.02);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bars__bar {
+		transition: none;
+	}
+
+	.js .bars:not(.is-revealed) .bars__bar {
+		transform: scaleY(var(--v));
+	}
+}
+
+.bars__cap {
+	font-size: 11.5px;
+	color: var(--gray-500);
+	text-align: center;
+	width: 100%;
+}
+
+.bars__val {
+	font-size: 12.5px;
+	font-weight: 600;
+	color: var(--gray-800);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Сутки по часам — 24 столбца вместо шести. Зазор и подписи ужаты: с шагом 12px
+   ряд не влезает даже в полную ширину полотна, а подпись 12,5px переносит
+   трёхзначное значение в две строки. */
+.bars--hours {
+	gap: 3px;
+	height: 200px;
+	min-width: 640px;
+}
+
+.bars--hours .bars__val,
+.bars--hours .bars__cap {
+	font-size: 9.5px;
+}
+
+/* Часы, когда в чате никого. Правило стоит после `--peak`: пик приходится на
+   рабочий час, так что пересечения нет, но порядок делает это явным. */
+.bars__col--off .bars__bar {
+	background: color-mix(in srgb, var(--warning-500) 88%, transparent);
+}
+
+.bars__legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 20px;
+	margin-top: 16px;
+	font-size: 12px;
+	color: var(--gray-500);
+}
+
+.bars__key {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.bars__swatch {
+	width: 10px;
+	height: 10px;
+	border-radius: 3px;
+	background: color-mix(in srgb, var(--brand-600) 90%, transparent);
+}
+
+.bars__swatch--off {
+	background: color-mix(in srgb, var(--warning-500) 88%, transparent);
+}
+
+/* ── Цитата из разговора ─────────────────────────────────────────────────── */
+
+.quote {
+	padding-left: 14px;
+	border-left: 2px solid var(--brand-200);
+}
+
+.quote p {
+	font-size: 14.5px;
+	line-height: 22px;
+	color: var(--gray-800);
+}
+
+.quote__meta {
+	margin-top: 8px;
+	font-size: 12.5px;
+	line-height: 18px;
+	color: var(--gray-500);
+}
+
+/* ── Список сценариев ────────────────────────────────────────────────────── */
+
+.checklist {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px 20px;
+}
+
+@media (max-width: 640px) {
+	.checklist {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.check {
+	display: grid;
+	grid-template-columns: 16px minmax(0, 1fr);
+	gap: 10px;
+	align-items: start;
+	font-size: 13.5px;
+	line-height: 20px;
+	color: var(--gray-700);
+}
+
+.check svg {
+	margin-top: 2px;
+	color: var(--success-600);
+	flex-shrink: 0;
+}
+
+/* ── Таблица ─────────────────────────────────────────────────────────────── */
+
+.table-wrap {
+	overflow-x: auto;
+	border-radius: var(--radius-card);
+	border: 1px solid var(--border-card);
+	background: var(--surface-card);
+}
+
+.table {
+	min-width: 720px;
+	font-size: 13.5px;
+}
+
+.table thead th {
+	padding: 11px 16px;
+	text-align: left;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--gray-500);
+	background: var(--gray-50);
+	border-bottom: 1px solid var(--border-card);
+	white-space: nowrap;
+}
+
+.table tbody td {
+	padding: 13px 16px;
+	border-bottom: 1px solid var(--border-card);
+	color: var(--gray-600);
+	vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+.table tbody tr:hover td {
+	background: var(--gray-25);
+}
+
+.table .num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.table .strong {
+	font-weight: 600;
+	color: var(--gray-900);
+}
+
+.table tfoot td {
+	padding: 12px 16px;
+	background: var(--gray-100);
+	border-top: 1px solid var(--border-card);
+	font-weight: 600;
+	color: var(--gray-900);
+}
+
+.chan {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-weight: 500;
+	color: var(--gray-900);
+	white-space: nowrap;
+}
+
+.chan__dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+	flex-shrink: 0;
+	background: var(--brand-600);
+}
+
+/* Мини-бар внутри ячейки — доля от максимума по столбцу. */
+.cellbar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	justify-content: flex-end;
+}
+
+.cellbar__track {
+	width: 84px;
+	height: 6px;
+	border-radius: 999px;
+	background: var(--gray-100);
+	overflow: hidden;
+	flex-shrink: 0;
+}
+
+.cellbar__fill {
+	display: block;
+	height: 100%;
+	border-radius: 999px;
+	background: var(--brand-500);
+	width: var(--v);
+}
+
+/* ── Потери и деньги ─────────────────────────────────────────────────────── */
+
+.loss {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 16px;
+	padding: 16px 0;
+	border-bottom: 1px solid var(--border-card);
+}
+
+.loss:last-of-type {
+	border-bottom: 0;
+}
+
+@media (max-width: 560px) {
+	.loss {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 8px;
+	}
+}
+
+.loss__title {
+	font-size: 14.5px;
+	font-weight: 500;
+	color: var(--gray-900);
+}
+
+.loss__note {
+	margin-top: 4px;
+	font-size: 13px;
+	line-height: 19px;
+	color: var(--gray-500);
+}
+
+.loss__sum {
+	font-family: var(--font-hero);
+	font-size: 20px;
+	font-weight: 600;
+	color: var(--error-600);
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.total {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 16px;
+	padding: 24px;
+	border-radius: var(--radius-card);
+	background: #0a0d12;
+	color: #ffffff;
+}
+
+.total__label {
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.total__value {
+	font-family: var(--font-hero);
+	font-size: 34px;
+	line-height: 40px;
+	font-weight: 600;
+	letter-spacing: -0.8px;
+	margin-top: 4px;
+}
+
+/* ── План ────────────────────────────────────────────────────────────────── */
+
+.step {
+	display: grid;
+	grid-template-columns: 32px minmax(0, 1fr);
+	gap: 16px;
+	padding: 18px 20px;
+	background: var(--surface-card);
+	border: 1px solid var(--border-card);
+	border-radius: var(--radius-card);
+}
+
+.step__num {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-md);
+	background: #0a0d12;
+	box-shadow: inset 0 0 0 1px rgba(10, 13, 18, 0.18), inset 0 4px 4px rgba(255, 255, 255, 0.25);
+	color: #ffffff;
+	font-size: 14px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.step__title {
+	font-family: var(--font-hero);
+	font-size: 20px;
+	line-height: 30px;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.step__text {
+	margin-top: 6px;
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-quaternary);
+}
+
+.step__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+/* ── Промо-блок ──────────────────────────────────────────────────────────── */
+
+/* Закрывающий CTA — та же небесная плита, что и у героя, в рамке rounded-[32px]
+   внешнего CTA-баннера лендинга. Было три наложенных градиента с тёмным низом:
+   в контенте лендинга градиентных заливок нет вовсе, «богатое» место ровно одно
+   — небо, и баннер повторяет именно его, а не заводит четвёртый градиент. */
+.promo {
+	position: relative;
+	overflow: hidden;
+	border-radius: var(--radius-banner);
+	padding: 56px 32px;
+	/* Тот же рецепт неба, что у героя: плоская заливка #1a62f5 без светлого
+	   размыва читается как сплошная синяя плита, а не как поле. */
+	background:
+		radial-gradient(110% 90% at 50% -10%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 66%),
+		#1a62f5;
+	color: #ffffff;
+	text-align: center;
+}
+
+@media (min-width: 900px) {
+	.promo {
+		padding: 64px 56px;
+	}
+}
+
+.promo::before {
+	content: '';
+	position: absolute;
+	inset: -30%;
+	background: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 88px);
+	pointer-events: none;
+}
+
+.promo__inner {
+	position: relative;
+	z-index: 1;
+}
+
+/* H2 CTA-баннера: 36/46 tracking −0.96 → md 48/60. */
+.promo h2 {
+	font-family: var(--font-hero);
+	font-size: 36px;
+	line-height: 46px;
+	letter-spacing: -0.96px;
+	font-weight: 500;
+	text-wrap: balance;
+	max-width: 760px;
+	margin: 16px auto 0;
+}
+
+@media (min-width: 900px) {
+	.promo h2 {
+		font-size: 48px;
+		line-height: 60px;
+	}
+}
+
+.promo__lede {
+	margin: 16px auto 0;
+	max-width: 560px;
+	font-size: 14px;
+	line-height: 20px;
+	text-wrap: pretty;
+	color: rgba(255, 255, 255, 0.86);
+}
+
+.promo__gifts {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-auto-rows: 1fr;
+	gap: 12px;
+	max-width: 620px;
+	margin: 32px auto 0;
+}
+
+@media (max-width: 620px) {
+	.promo__gifts {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* Стекло на небе — единственный разрешённый «стеклянный» рецепт лендинга:
+   border-white/30 + bg-white/10 + backdrop-blur-[6px]. */
+.promo__gift {
+	padding: 24px 20px;
+	border-radius: var(--radius-2xl);
+	background: rgba(255, 255, 255, 0.1);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+}
+
+.promo__gift b {
+	display: block;
+	font-family: var(--font-hero);
+	font-size: 24px;
+	line-height: 32px;
+	letter-spacing: -0.48px;
+	font-weight: 500;
+}
+
+.promo__gift span {
+	display: block;
+	margin-top: 6px;
+	font-size: 13.5px;
+	color: rgba(255, 255, 255, 0.84);
+}
+
+.promo__actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 12px;
+	margin-top: 32px;
+}
+
+/* Адреса вместо кнопок — только в печати (см. .print-only). */
+.promo__links {
+	margin-top: 28px;
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.75);
+}
+
+.promo__links a {
+	color: #ffffff;
+	font-weight: 600;
+}
+
+.promo__links span {
+	margin: 0 8px;
+}
+
+.promo__fine {
+	margin-top: 20px;
+	font-size: 12.5px;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Плавающий лаунчер ───────────────────────────────────────────────────── *
+ * Единственное действие документа — скачать PDF — живёт не в шапке, а внизу по
+ * центру, как агент-виджет на happ.tools. Геометрия, тень и правило «внутри
+ * пилюли всё rounded-full» взяты с FloatingWidget лендинга: радиус 12px внутри
+ * капсулы читается как срезанный угол.
+ *
+ * Лаунчер появляется, только когда обложка ушла из кадра: на первом экране у
+ * героя своя большая кнопка, и две одинаковые рядом были бы шумом.
+ */
+.launcher {
+	position: fixed;
+	bottom: max(16px, env(safe-area-inset-bottom));
+	left: 50%;
+	z-index: 60;
+	translate: -50% 0;
+	transition: opacity 300ms ease-out, translate 300ms ease-out;
+}
+
+@media (min-width: 768px) {
+	.launcher {
+		bottom: 32px;
+	}
+}
+
+/* Скрытое состояние обусловлено `.js`: без скрипта лаунчеру нечем показаться,
+   и кнопка пропала бы совсем — поэтому без JS он просто всегда видим. */
+.js .launcher[data-hidden] {
+	opacity: 0;
+	translate: -50% 12px;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.launcher {
+		transition: none;
+	}
+}
+
+.launcher__pill {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	max-width: calc(100vw - 32px);
+	padding: 6px 6px 6px 8px;
+	border: 1px solid #e9eaeb;
+	border-radius: 999px;
+	background: #ffffff;
+	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.08), 0 12px 8px rgba(0, 0, 0, 0.05);
+}
+
+.launcher__mark {
+	display: block;
+	width: 32px;
+	height: 32px;
+	flex-shrink: 0;
+}
+
+.launcher__label {
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 500;
+	color: var(--text-primary);
+	white-space: nowrap;
+}
+
+.launcher__divider {
+	width: 1px;
+	height: 24px;
+	flex-shrink: 0;
+	background: #e9eaeb;
+}
+
+.launcher__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	flex-shrink: 0;
+	border: 0;
+	border-radius: 999px;
+	padding: 8px 16px;
+	font-family: inherit;
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+	color: #ffffff;
+	background: var(--brand-600);
+	box-shadow: inset 0 0 0 1px rgba(10, 13, 18, 0.18), inset 0 4px 4px rgba(255, 255, 255, 0.25);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+	transition: background-color 150ms ease-out, scale 150ms var(--ease-out-strong);
+}
+
+.launcher__btn:hover:not(:focus-visible) {
+	background: var(--brand-700);
+}
+
+.launcher__btn:active {
+	scale: 0.96;
+}
+
+.launcher__btn:focus-visible {
+	outline: 2px solid var(--brand-600);
+	outline-offset: 2px;
+}
+
+.launcher__btn svg {
+	display: block;
+	flex-shrink: 0;
+}
+
+/* На узком экране от пилюли остаётся знак и кнопка: подпись и разделитель
+   съедают место у единственного действия, ради которого лаунчер и нужен. */
+@media (max-width: 560px) {
+	.launcher__label,
+	.launcher__divider {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.launcher__btn {
+		transition: background-color 150ms ease-out;
+	}
+
+	.launcher__btn:active {
+		scale: 1;
+	}
+}
+
+/* ── Подвал ──────────────────────────────────────────────────────────────── */
+
+.footer {
+	padding: 64px 24px 104px;
+	border-top: 1px solid #eaecf0;
+	background: #ffffff;
+}
+
+.footer__inner {
+	max-width: var(--shell);
+	margin: 0 auto;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.footer__note {
+	font-size: 12.5px;
+	line-height: 19px;
+	color: var(--gray-500);
+	max-width: 560px;
+}
+
+/* ── Мелочи ──────────────────────────────────────────────────────────────── */
+
+.note {
+	display: flex;
+	gap: 10px;
+	padding: 16px 20px;
+	border-radius: var(--radius-2xl);
+	background: var(--surface-card);
+	border: 1px solid var(--border-card);
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-quaternary);
+}
+
+.note--brand {
+	background: var(--brand-25);
+	border-color: var(--brand-200);
+	color: var(--brand-950);
+}
+
+.note svg {
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.stack--sm {
+	gap: 10px;
+}
+
+.stack--lg {
+	gap: 28px;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.row--between {
+	justify-content: space-between;
+}
+
+.muted {
+	color: var(--gray-500);
+}
+
+.print-only {
+	display: none;
+}
+
+/* ── Печать: A4, обложка, без интерактива ───────────────────────────────── */
+
+@page {
+	size: A4;
+	margin: 14mm 12mm;
+}
+
+/* Обложка — в обрез. Поля обнуляются только на первой странице, поэтому свои
+   отступы герой в печати задаёт сам (см. .hero__inner ниже). */
+@page :first {
+	margin: 0;
+}
+
+@media print {
+	:root {
+		--topbar-h: 0px;
+	}
+
+	html {
+		scroll-behavior: auto;
+	}
+
+	body {
+		font-size: 10.5px;
+		line-height: 15px;
+		background: #ffffff;
+	}
+
+	.topbar,
+	.no-print {
+		display: none !important;
+	}
+
+	.print-only {
+		display: block;
+	}
+
+	.promo__links a,
+	.promo__links span {
+		display: inline;
+	}
+
+	/* Фоновые заливки печатаются: без них обложка, промо и все шкалы —
+	   столбцы, прогресс, мини-бары в таблице — теряют смысл. */
+	.hero,
+	.promo,
+	.promo__gift,
+	.total,
+	.card,
+	.card__body--panel,
+	.card > .table-wrap,
+	.kpi,
+	.finding,
+	.step,
+	.table thead th,
+	.table tfoot td,
+	.bars__bar,
+	.bars__swatch,
+	.criterion__fill,
+	.cellbar__fill,
+	.kpi--brand,
+	.step__num,
+	.finding__num,
+	.pill,
+	.pill--key::before,
+	.score,
+	.note {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+	/* Обложка — отдельная страница в обрез, поля обнулены в @page :first. */
+	.hero {
+		border-radius: 0;
+		break-after: page;
+		min-height: 296mm;
+		display: flex;
+		align-items: stretch;
+	}
+
+	/* Радиальный фейд посчитан под широкую плиту экрана. На вертикальном A4 тот
+	   же эллипс растягивается на всю страницу, белое начинается уже с середины —
+	   и белый заголовок садится на белое. В печати фейд линейный: синее держится
+	   до 62% листа, белое начинается с 78%. Композиция от этого та же, что на
+	   экране: заголовок в небе, панель фактов на белом под ним. */
+	.hero::after {
+		background: linear-gradient(
+			180deg,
+			rgba(255, 255, 255, 0) 58%,
+			rgba(255, 255, 255, 0.4) 68%,
+			rgba(255, 255, 255, 0.85) 74%,
+			#ffffff 78%
+		);
+	}
+
+	/* Логотип и заголовок стоят в верхней половине (по синему), а `margin-top:
+	   auto` на панели фактов сгоняет её и выходные данные на белый низ. */
+	.hero__inner {
+		max-width: none;
+		width: 100%;
+		padding: 32mm 16mm 18mm;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* На бумаге заголовку доступна вся ширина A4 и целая страница под ним —
+	   экранные 34px на этом поле выглядят как подпись, а не как название. */
+	.hero h1 {
+		font-size: 46px;
+		letter-spacing: -1.4px;
+	}
+
+	.hero__facts {
+		margin-top: auto;
+	}
+
+	.hero__lede {
+		margin-top: 16px;
+		max-width: 150mm;
+	}
+
+	.hero__credit {
+		margin-top: 28px;
+		padding-top: 16px;
+		border-top: 1px solid var(--border-card);
+	}
+
+	.hero__lede {
+		font-size: 12.5px;
+		line-height: 19px;
+	}
+
+	.section {
+		padding: 0;
+	}
+
+	.section--alt {
+		background: #ffffff;
+		border: 0;
+	}
+
+	/* Раздел на страницу. Печатная типографика ниже ужата так, что самый
+	   высокий раздел (двенадцать тем со сводкой) укладывается в 269mm полосы,
+	   поэтому разрыв перед каждым разделом ничего не рвёт: он только не даёт
+	   карточке переехать через край. Сквозной поток экономил бы страницу-другую,
+	   но платил за это разорванными карточками — строка на следующей странице
+	   приходила без верхней рамки и без заголовка, над которым она стоит. */
+	.section {
+		break-before: page;
+	}
+
+	.shell {
+		gap: 4mm;
+		max-width: none;
+	}
+
+	/* Заголовок раздела не остаётся один на дне страницы. */
+	.heading,
+	.card__head {
+		break-after: avoid;
+	}
+
+	.heading {
+		break-inside: avoid;
+	}
+
+	.heading h2 {
+		font-size: 20px;
+		line-height: 26px;
+		letter-spacing: -0.3px;
+	}
+
+	.heading__lede {
+		font-size: 11px;
+		line-height: 16px;
+	}
+
+	.hero__facts {
+		box-shadow: none;
+	}
+
+	/* Неразрывны только элементы, которые заведомо влезают на страницу целиком.
+	   Высокие `.card` в этот список НЕ входят: карточки-контейнеры (двенадцать
+	   тем, шесть критериев) выше половины страницы, и запрет разрыва на них не
+	   сжимал их, а выталкивал целиком, оставляя предыдущую страницу пустой.
+	   Невысокие карточки запрет получают ниже, отдельным правилом. */
+	.kpi,
+	.step,
+	.finding,
+	.note,
+	.total,
+	.criterion,
+	.loss,
+	.quote,
+	.check,
+	.bars {
+		break-inside: avoid;
+	}
+
+	/* Карточки, которые заведомо ниже страницы, запрещают разрыв целиком: это
+	   пары в .grid--2 (четыре-шесть строк) и правый рельс раздела тем. Без
+	   запрета такая карточка роняла на следующую страницу одну строку, и та
+	   висела под верхним полем без рамки сверху — выглядело как сбой печати, а
+	   не как продолжение. Полноширинные карточки (двенадцать тем, шесть
+	   критериев) в правило не входят: они выше страницы, и запрет выталкивал бы
+	   их целиком, оставляя предыдущую страницу пустой. */
+	.grid--2 > .card,
+	.grid--wide-left .card--pad {
+		break-inside: avoid;
+	}
+
+	/* Разорванная карточка не должна показывать одну строку в отрыве от
+	   заголовка или оставлять одну строку на следующей странице. */
+	.criteria,
+	.card__body {
+		orphans: 2;
+		widows: 2;
+	}
+
+	.grid {
+		gap: 4mm;
+	}
+
+	.grid--4 {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+
+	.grid--3 {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.grid--2 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	/* Экранные 14px отступа строки на бумаге дают лишние 12 строк высоты на
+	   двенадцати темах — ровно столько, чтобы последняя тема ушла на следующую
+	   страницу в одиночку. На полосе печати строка и так набрана 10,5px, и 9px
+	   отступа держат тот же ритм. */
+	/* Строка критерия на бумаге. Экранные 14px названия и 12,5px пояснения
+	   поставлены под 14px основного текста; при печатных 10,5px они читаются как
+	   подзаголовки и раздувают список из двенадцати строк на треть страницы.
+	   Здесь вся строка приведена к печатному кеглю — и двенадцать тем со сводкой
+	   укладываются в одну полосу. */
+	.criterion,
+	.grid--2 .criterion {
+		padding: 6px 0;
+	}
+
+	.criterion__label {
+		font-size: 11.5px;
+		line-height: 16px;
+	}
+
+	.criterion__note {
+		margin-top: 1px;
+		font-size: 10px;
+		line-height: 14px;
+	}
+
+	.criterion__score {
+		font-size: 11.5px;
+	}
+
+	/* Полоса печати — около 700px, и в карточках, стоящих по две в ряд, под
+	   название критерия остаётся порядка 90px: текст рассыпается в вертикальную
+	   полоску по одному слову в строке и наезжает на шкалу. Трек ужат с 168px до
+	   64 — на бумаге его работа показать цветом, а не длиной. */
+	.grid--2 .criterion {
+		grid-template-columns: minmax(0, 1fr) 64px 34px;
+		gap: 10px;
+	}
+
+	/* Правый рельс на печати — треть полосы, около 220px. Пара «название —
+	   значение» без запрета переноса складывается в две строки, и колонка
+	   значений перестаёт читаться сверху вниз. */
+	.stack--sm {
+		gap: 6px;
+	}
+
+	.stack--sm .row {
+		flex-wrap: nowrap;
+	}
+
+	.rail-label {
+		font-size: 10px;
+		line-height: 14px;
+	}
+
+	.stack--sm .row > :first-child {
+		min-width: 0;
+	}
+
+	/* На экране критерии и сводка стоят рядом. На полосе печати (~700px) это не
+	   работает: под название критерия с пояснением остаётся 126px, и текст
+	   рассыпается в вертикальную полоску. Поэтому критерии занимают всю ширину,
+	   а сводка уходит под них в три карточки в ряд. */
+	.grid--wide-left {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.grid--wide-left > .stack {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 4mm;
+		align-items: start;
+	}
+
+	/* Кольцо над текстом, а не слева от него: рядом с 132px-графикой в третьей
+	   доли полосы тексту остаётся сотня пикселей. */
+	.ring {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.card__head {
+		padding: 10px 14px;
+	}
+
+	.card__body {
+		padding: 14px;
+	}
+
+	.card__body--panel {
+		padding: 10px 14px;
+	}
+
+	.card--pad {
+		padding: 14px;
+	}
+
+	/* Экранные 20px Host Grotesk у заголовков карточек, выводов и шагов на
+	   полосе печати спорят с 20px заголовка самого раздела. Здесь вся шкала
+	   сдвинута на ступень вниз, пропорции между уровнями сохранены. */
+	.card__title,
+	.finding__title,
+	.step__title {
+		font-size: 13px;
+		line-height: 18px;
+	}
+
+	.card__caption {
+		font-size: 10px;
+		line-height: 14px;
+	}
+
+	.finding__text,
+	.step__text {
+		font-size: 10px;
+		line-height: 14px;
+	}
+
+	.finding__num,
+	.step__num {
+		width: 22px;
+		height: 22px;
+		font-size: 11px;
+	}
+
+	.hero__fact dd {
+		font-size: 17px;
+		line-height: 22px;
+	}
+
+	.card > .table-wrap .table tr > :first-child {
+		padding-left: 14px;
+	}
+
+	.card > .table-wrap .table tr > :last-child {
+		padding-right: 14px;
+	}
+
+	.kpi {
+		gap: 10px;
+		padding: 10px;
+	}
+
+	.kpi__value {
+		font-size: 18px;
+		line-height: 22px;
+	}
+
+	.kpi__label {
+		font-size: 10px;
+		line-height: 14px;
+	}
+
+	.table {
+		min-width: 0;
+		font-size: 10px;
+	}
+
+	.table thead th {
+		padding: 6px 8px;
+		font-size: 9.5px;
+	}
+
+	.table tbody td {
+		padding: 5px 8px;
+	}
+
+	.table tfoot td {
+		padding: 6px 8px;
+	}
+
+	.table-wrap {
+		overflow: visible;
+	}
+
+	.bars {
+		height: 170px;
+	}
+
+	/* Двадцать четыре часа на полосе ~700px — это 25px на колонку. Подписи
+	   уменьшены, чтобы «138» над столбцом не переносилось в две строки: с
+	   переносом ряд значений перестаёт читаться как одна линия.
+	   Высота взята с запасом: раздел о времени — единственный, который не
+	   добирает свою страницу, и график там главный, а не подпись к тексту. При
+	   116px ночные часы (3–6 обращений) давали столбец в полпикселя. */
+	.bars--hours {
+		height: 210px;
+		gap: 2px;
+	}
+
+	.bars--hours .bars__val,
+	.bars--hours .bars__cap {
+		font-size: 7.5px;
+	}
+
+	.bars__legend {
+		font-size: 9px;
+	}
+
+	.check {
+		font-size: 10px;
+		line-height: 14px;
+	}
+
+	.quote p {
+		font-size: 11px;
+		line-height: 16px;
+	}
+
+	.quote__meta {
+		font-size: 9.5px;
+		line-height: 13px;
+	}
+
+	/* Предложение — своя страница почти целиком: это последний экран документа,
+	   и прижатый к верху блок на треть листа читается как обрезанный. Радиус
+	   сохранён (в отличие от обложки, которая печатается в обрез): здесь поля
+	   страницы никуда не деваются, и прямые углы внутри белой рамки выглядели
+	   бы обрывом, а не карточкой. */
+	.promo {
+		break-inside: avoid;
+		min-height: 195mm;
+		display: flex;
+		align-items: center;
+		padding: 16mm 14mm;
+	}
+
+	.promo__inner {
+		width: 100%;
+	}
+
+	.promo h2 {
+		font-size: 30px;
+	}
+
+	.promo__gift b {
+		font-size: 22px;
+		line-height: 28px;
+	}
+
+	.footer {
+		break-inside: avoid;
+		background: #ffffff;
+		padding: 8mm 0 0;
+	}
+
+	/* Анимации в печати не проигрываются — сразу конечное состояние. */
+	.criterion__fill,
+	.bars__bar,
+	.ring__value {
+		transition: none;
+	}
+
+	.criterion__fill {
+		transform: scaleX(1);
+	}
+
+	.bars__bar {
+		transform: scaleY(var(--v));
+	}
+}

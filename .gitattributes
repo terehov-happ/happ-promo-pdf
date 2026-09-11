@@ -1,0 +1,6 @@
+# Исходники набраны с LF; без этого Git на Windows подменяет их на CRLF при
+# checkout, и первый же коммит с другой машины показывает изменённым весь файл.
+* text=auto eol=lf
+
+*.pdf binary
+*.svg text eol=lf
